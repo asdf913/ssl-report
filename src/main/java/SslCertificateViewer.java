@@ -65,7 +65,7 @@ public class SslCertificateViewer {
 			//
 			Date date = null;
 			//
-			Map<String, Duration> durations = null;
+			Map<String, String> durations = null;
 			//
 			for (final Entry<String, Date> en : map.entrySet()) {
 				//
@@ -76,11 +76,13 @@ public class SslCertificateViewer {
 				} // if
 					//
 				put(durations = ObjectUtils.getIfNull(durations, LinkedHashMap::new), en.getKey(),
-						toDuration(en.getValue(), date = ObjectUtils.getIfNull(date, Date::new)));
+						toString(toDuration(en.getValue(), date = ObjectUtils.getIfNull(date, Date::new))));
 				//
 			} // for
 				//
-			final int maxLength = orElse(max(mapToInt(stream(keySet(map)), StringUtils::length)), 0);
+			final int maxLength1 = orElse(max(mapToInt(stream(keySet(map)), StringUtils::length)), 0);
+			//
+			final int maxLength2 = orElse(max(mapToInt(stream(values(durations)), StringUtils::length)), 0);
 			//
 			String key = null;
 			//
@@ -94,15 +96,19 @@ public class SslCertificateViewer {
 					//
 				} // if
 					//
-				System.out.println(StringUtils.rightPad(key = en.getKey(), maxLength) + " "
+				System.out.println(StringUtils.rightPad(key = en.getKey(), maxLength1) + " "
 						+ format(df = ObjectUtils.getIfNull(df, () -> new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")),
 								en.getValue())
-						+ " " + toString(get(durations, key)));
+						+ " " + StringUtils.leftPad(get(durations, key), maxLength2));
 				//
 			} // for
 				//
 		} // if
 			//
+	}
+
+	private static <V> Collection<V> values(final Map<?, V> instance) {
+		return instance != null ? instance.values() : null;
 	}
 
 	private static <K> Set<K> keySet(final Map<K, ?> instance) {

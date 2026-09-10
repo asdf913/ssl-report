@@ -98,7 +98,7 @@ public class SslCertificateViewerTest {
 				//
 				return null;
 				//
-			} else if (proxy instanceof Map && contains(Arrays.asList("get", "put", "keySet"), name)) {
+			} else if (proxy instanceof Map && contains(Arrays.asList("get", "put", "keySet", "values"), name)) {
 				//
 				return null;
 				//
