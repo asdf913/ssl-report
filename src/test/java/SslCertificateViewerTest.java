@@ -40,7 +40,7 @@ import io.github.toolfactory.narcissus.Narcissus;
 public class SslCertificateViewerTest {
 
 	private static Method METHOD_CAST, METHOD_FORMAT, METHOD_TO_DURATION, METHOD_TO_STRING, METHOD_GET_NAME,
-			METHOD_LONGEST_COMMON_SUB_STRING = null;
+			METHOD_LONGEST_COMMON_SUB_STRING, METHOD_ENDS_WITH = null;
 
 	@BeforeClass
 	static void beforeClass() throws NoSuchMethodException, ClassNotFoundException {
@@ -61,11 +61,13 @@ public class SslCertificateViewerTest {
 		(METHOD_LONGEST_COMMON_SUB_STRING = clz.getDeclaredMethod("longestCommonSubstring", String.class, String.class))
 				.setAccessible(true);
 		//
+		(METHOD_ENDS_WITH = clz.getDeclaredMethod("endsWith", String.class, String.class)).setAccessible(true);
+		//
 	}
 
 	private static class IH implements InvocationHandler {
 
-		private Boolean test;
+		private Boolean test, anyMatch;
 
 		private Integer size;
 
@@ -110,10 +112,18 @@ public class SslCertificateViewerTest {
 				//
 				return null;
 				//
-			} else if (proxy instanceof Stream && contains(Arrays.asList("collect", "filter", "mapToInt"), name)) {
+			} else if (proxy instanceof Stream) {
 				//
-				return null;
-				//
+				if (contains(Arrays.asList("collect", "filter", "mapToInt"), name)) {
+					//
+					return null;
+					//
+				} else if (Objects.equals(name, "anyMatch")) {
+					//
+					return anyMatch;
+					//
+				} // if
+					//
 			} else if (proxy instanceof List && Objects.equals(name, "get")) {
 				//
 				return null;
@@ -367,7 +377,9 @@ public class SslCertificateViewerTest {
 					|| Boolean.logicalOr(Objects.equals(name, "append"),
 							Arrays.equals(parameterTypes, new Class<?>[] { StringBuilder.class, Object.class }))
 					|| Boolean.logicalOr(Objects.equals(name, "getClass"),
-							Arrays.equals(parameterTypes, new Class<?>[] { Object.class }))) {
+							Arrays.equals(parameterTypes, new Class<?>[] { Object.class }))
+					|| Boolean.logicalOr(Objects.equals(name, "delete"), Arrays.equals(parameterTypes,
+							new Class<?>[] { StringBuilder.class, Integer.TYPE, Integer.TYPE }))) {
 				//
 				Assert.assertNotNull(result, toString);
 				//
@@ -455,6 +467,17 @@ public class SslCertificateViewerTest {
 		//
 		Assert.assertEquals(
 				invoke(METHOD_LONGEST_COMMON_SUB_STRING, null, "abc", Narcissus.allocateInstance(String.class)), "");
+		//
+	}
+
+	@Test
+	public void testEndsWith() throws IllegalAccessException, InvocationTargetException, ParseException {
+		//
+		final String s = "s";
+		//
+		Assert.assertEquals(invoke(METHOD_ENDS_WITH, null, s, s), Boolean.TRUE);
+		//
+		Assert.assertEquals(invoke(METHOD_ENDS_WITH, null, s, Narcissus.allocateInstance(String.class)), Boolean.FALSE);
 		//
 	}
 

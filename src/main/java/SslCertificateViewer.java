@@ -82,11 +82,19 @@ public class SslCertificateViewer {
 				//
 			final int maxLength1 = orElse(max(mapToInt(stream(keySet(map)), StringUtils::length)), 0);
 			//
-			final int maxLength2 = orElse(max(mapToInt(stream(values(durations)), StringUtils::length)), 0);
+			final Collection<String> values = values(durations);
+			//
+			final int maxLength2 = orElse(max(mapToInt(stream(values), StringUtils::length)), 0);
+			//
+			final boolean containsEndsWithDay = anyMatch(stream(values), x -> endsWith(x, "Day"));
 			//
 			String key = null;
 			//
 			DateFormat df = null;
+			//
+			StringBuilder sb = null;
+			//
+			String s = null;
 			//
 			for (final Entry<String, Date> en : map.entrySet()) {
 				//
@@ -96,15 +104,52 @@ public class SslCertificateViewer {
 					//
 				} // if
 					//
-				System.out.println(StringUtils.rightPad(key = en.getKey(), maxLength1) + " "
-						+ format(df = ObjectUtils.getIfNull(df, () -> new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")),
-								en.getValue())
-						+ " " + StringUtils.leftPad(get(durations, key), maxLength2));
+				if (StringUtils.isNotEmpty(sb = ObjectUtils.getIfNull(sb, StringBuilder::new))) {
+					//
+					delete(sb, 0, StringUtils.length(sb));
+					//
+				} // if
+					//
+				append(sb, StringUtils.rightPad(key = en.getKey(), maxLength1));
+				//
+				append(sb, ' ');
+				//
+				append(sb, format(df = ObjectUtils.getIfNull(df, () -> new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")),
+						en.getValue()));
+				//
+				append(sb, ' ');
+				//
+				if (Boolean.logicalAnd(endsWith(s = get(durations, key), "Month"), containsEndsWithDay)) {
+					//
+					s += "       ";
+					//
+				} // if
+					//
+				System.out.println(append(sb, StringUtils.leftPad(s, maxLength2)));
 				//
 			} // for
 				//
 		} // if
 			//
+	}
+
+	private static boolean endsWith(final String instance, final String suffix) {
+		//
+		if (instance == null) {
+			//
+			return false;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "value")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		return (field == null || Boolean.logicalAnd(Narcissus.getField(instance, field) != null,
+				Narcissus.getField(suffix, field) != null)) && instance.endsWith(suffix);
+		//
 	}
 
 	private static <V> Collection<V> values(final Map<?, V> instance) {
@@ -300,6 +345,10 @@ public class SslCertificateViewer {
 			//
 	}
 
+	private static StringBuilder delete(final StringBuilder instance, final int start, final int end) {
+		return instance != null ? instance.delete(start, end) : instance;
+	}
+
 	private static StringBuilder append(final StringBuilder instance, final char c) {
 		//
 		if (instance == null) {
@@ -346,6 +395,10 @@ public class SslCertificateViewer {
 
 	private static String getName(final Member instance) {
 		return instance != null ? instance.getName() : null;
+	}
+
+	private static <T> boolean anyMatch(final Stream<T> instance, final Predicate<? super T> predicate) {
+		return instance != null && instance.anyMatch(predicate);
 	}
 
 	private static <T> Stream<T> filter(final Stream<T> instance, final Predicate<? super T> predicate) {
